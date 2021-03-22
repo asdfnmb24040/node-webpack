@@ -1,0 +1,16 @@
+{
+	"name": "node-test",
+	"main": "server.js",
+	"version": "1.0.0",
+	"scripts": {
+		"start": "webpack --config webpack.config.js"
+	},
+	"dependencies": {
+		"express": "^4.17.1",
+		"webpack": "^5.27.1",
+		"webpack-cli": "^4.5.0"
+	},
+	"devDependencies": {
+		"webpack-dev-server": "^3.11.2"
+	}
+}
