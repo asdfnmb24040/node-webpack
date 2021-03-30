@@ -1,10 +1,11 @@
 /* webpack.config.js ： Webpack 的設定檔 */
 const path = require( 'path' );
 const nodeExternals = require( 'webpack-node-externals' );
+const CopyPlugin = require( 'copy-webpack-plugin' );
 const clientConfig = {
 	target: 'node',
 	entry: {
-		'index': './server.js'
+		'index': './src/app.js'
 	},
 	node: {
 		__dirname: false,
@@ -17,6 +18,15 @@ const clientConfig = {
 		filename: '[name].bundle.js'
 	},
 	externals: [ nodeExternals() ],
-	// 這個是擴展，太複雜本系列不會帶到，請到webpack官網查看
+	// 擴展
+	plugins: [
+		new webpack.IgnorePlugin( /terser-webpack-plugin/ ),
+		new CopyPlugin( {
+			patterns: [
+				{ from: path.join( __dirname, 'src/views' ), to: path.join( __dirname, 'dist/views' ) },
+			]
+			// 指定來源與目的地
+		} )
+	],
 }
 module.exports = [ clientConfig ];
