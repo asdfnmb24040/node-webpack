@@ -128,7 +128,7 @@ const updateServerPlayerAmount = async ( param ) => {
 		const orderid = param.channelId + moment().utcOffset( 8 ).format( 'YYMMDDHHmmss' );;
 		const route = ChannelHandleRoute;
 		const timestamp = Date.now();
-		const args = `?agent=${param.channelId}&param={"money":${param.requestAmount},"account":"${param.account}","orderid":${orderid},"s":2}&timestamp="${timestamp}"`;
+		const args = `?test=true&agent=${param.channelId}&param={"money":${param.requestAmount},"account":"${param.account}","orderid":${orderid},"s":2}&timestamp="${timestamp}"`;
 		const url = route + args;
 
 		request( url, ( error, response, responseData ) => {
