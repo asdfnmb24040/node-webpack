@@ -13,8 +13,10 @@
 	"devDependencies": {
 		"copy-webpack-plugin": "^8.1.0",
 		"ejs": "^3.1.6",
+		"moment": "^2.29.1",
 		"mysql": "^2.18.1",
 		"nodemon": "^2.0.7",
+		"request": "^2.88.2",
 		"webpack": "^5.27.1",
 		"webpack-dev-server": "^3.11.2",
 		"webpack-node-externals": "^2.5.2"
