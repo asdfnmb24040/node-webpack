@@ -35,6 +35,12 @@ async function queryAsync ( sql, values ) {
 	} );
 }
 
+function getRealChannelId ( account ) {
+	const leng = account.indexOf( '_' );
+
+	return account.substring( 0, leng );
+}
+
 function getRealAccount ( account ) {
 	const leng = account.indexOf( '_' );
 
@@ -50,7 +56,7 @@ router.get( '/addBalance', async ( req, res ) => {
 
 router.get( '/getBalance', async ( req, res ) => {
 	console.log( req.query )
-	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where Accounts = '${getRealAccount( req.query.account )}';`
+	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where ChannelId = '${getRealChannelId( req.query.account )}';`
 	console.log( { sql } )
 	const query_agent_md5_key = await queryAsync( sql, [] )
 	// console.log( { query: query_agent_md5_key } )
@@ -78,7 +84,7 @@ router.get( '/getBalance', async ( req, res ) => {
 router.get( '/checkBalance', async ( req, res ) => {
 	console.log( 'checkBalance=>', req.query )
 	const param_raw = decodeURIComponent( req.query.param )
-	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where Accounts = '${getRealAccount( req.query.account )}';`
+	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where ChannelId = '${getRealChannelId( req.query.account )}';`
 	console.log( { sql } )
 	const query_agent_md5_key = await queryAsync( sql, [] )
 
