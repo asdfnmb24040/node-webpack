@@ -35,9 +35,10 @@ async function queryAsync ( sql, values ) {
 	} );
 }
 
-function getChannelId ( account ) {
-	console.log( { account } );
-	return account.substring( 0, 6 );
+function getRealAccount ( account ) {
+	const leng = account.indexOf( '_' );
+
+	return account.substring( leng + 1 );
 }
 
 router.get( '/addBalance', async ( req, res ) => {
@@ -49,7 +50,7 @@ router.get( '/addBalance', async ( req, res ) => {
 
 router.get( '/getBalance', async ( req, res ) => {
 	console.log( req.query )
-	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where channelid = '${req.query.account}';`
+	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where Accounts = '${getRealAccount( req.query.account )}';`
 	console.log( { sql } )
 	const query_agent_md5_key = await queryAsync( sql, [] )
 	// console.log( { query: query_agent_md5_key } )
@@ -77,7 +78,7 @@ router.get( '/getBalance', async ( req, res ) => {
 router.get( '/checkBalance', async ( req, res ) => {
 	console.log( 'checkBalance=>', req.query )
 	const param_raw = decodeURIComponent( req.query.param )
-	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where channelid = '${req.query.account}';`
+	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where Accounts = '${getRealAccount( req.query.account )}';`
 	console.log( { sql } )
 	const query_agent_md5_key = await queryAsync( sql, [] )
 
@@ -87,6 +88,7 @@ router.get( '/checkBalance', async ( req, res ) => {
 	console.log( { param } );
 	const requestAmount = parseInt( param.requestAmount )
 	const requestPass = param.requestAmount <= balance
+	console.log( { requestAmount, balance } )
 
 	if ( requestPass ) {
 		balance -= requestAmount;
@@ -125,11 +127,16 @@ const ChannelHandleRoute = 'http://192.168.1.208:89/channelHandle';
  */
 const updateServerPlayerAmount = async ( param ) => {
 	return new Promise( ( resolve, reject ) => {
+
+		param.requestAmount = param.requestAmount / 100;
+
 		const orderid = param.channelId + moment().utcOffset( 8 ).format( 'YYMMDDHHmmss' );;
 		const route = ChannelHandleRoute;
 		const timestamp = Date.now();
-		const args = `?test=true&agent=${param.channelId}&param={"money":${param.requestAmount},"account":"${param.account}","orderid":${orderid},"s":2}&timestamp="${timestamp}"`;
+		const args = `?test=true&agent=${param.channelId}&param={"money":${param.requestAmount},"account":"${getRealAccount( param.account )}","orderid":${orderid},"s":2}&timestamp="${timestamp}"`;
 		const url = route + args;
+
+		console.log( url )
 
 		request( url, ( error, response, responseData ) => {
 
