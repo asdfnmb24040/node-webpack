@@ -16,6 +16,7 @@
 		"moment": "^2.29.1",
 		"mysql": "^2.18.1",
 		"nodemon": "^2.0.7",
+		"querystring": "^0.2.1",
 		"request": "^2.88.2",
 		"webpack": "^5.27.1",
 		"webpack-dev-server": "^3.11.2",

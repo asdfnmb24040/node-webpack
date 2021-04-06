@@ -3,9 +3,10 @@ var router = express.Router();
 const utils = require( '../utils/utils' );
 const moment = require( 'moment' );
 const request = require( 'request' );
+const crypto = require( 'crypto' );
+var qs = require( 'querystring' );
 
 let balance = 6000;
-// const agent_MD5_key = '4F5271D1935125D8'
 
 const mysql = require( 'mysql' );
 const connection = mysql.createConnection( {
@@ -55,6 +56,7 @@ router.get( '/addBalance', async ( req, res ) => {
 } )
 
 router.get( '/getBalance', async ( req, res ) => {
+
 	console.log( req.query )
 	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where ChannelId = '${getRealChannelId( req.query.account )}';`
 	console.log( { sql } )
@@ -89,6 +91,7 @@ router.get( '/checkBalance', async ( req, res ) => {
 	const query_agent_md5_key = await queryAsync( sql, [] )
 
 	const agent_md5_key = query_agent_md5_key[ 0 ].Md5key
+	const agent_des_key = query_agent_md5_key[ 0 ].Deskey
 	const param_decode = utils.desDecode( agent_md5_key, param_raw );
 	const param = JSON.parse( param_decode );
 	console.log( { param } );
@@ -110,7 +113,7 @@ router.get( '/checkBalance', async ( req, res ) => {
 	console.log( { res_obj } )
 	console.log( { param_return } )
 
-	var result = await updateServerPlayerAmount( param );
+	var result = await updateServerPlayerAmount( param, agent_des_key, agent_md5_key );
 
 	console.log( { result } );
 
@@ -126,23 +129,36 @@ router.get( '/checkBalance', async ( req, res ) => {
 } )
 
 const ChannelHandleRoute = 'http://192.168.1.208:89/channelHandle';
+//const ChannelHandleRoute = 'http://127.0.0.1:89/channelHandle';
+
 /**
  * @description 呼叫channelHandle進行上分
  * @param {Object} param 
  * @returns {Boolean} 是否上分成功
  */
-const updateServerPlayerAmount = async ( param ) => {
+const updateServerPlayerAmount = async ( param, agent_des_key, agent_md5_key ) => {
 	return new Promise( ( resolve, reject ) => {
 
-		param.requestAmount = param.requestAmount / 100;
+		console.log( { param, agent_md5_key, agent_des_key } );
 
-		const orderid = param.channelId + moment().utcOffset( 8 ).format( 'YYMMDDHHmmss' );;
-		const route = ChannelHandleRoute;
+		param.account = getRealAccount( param.account )
+		param.channelId = param.channelId.toString();
+		param.requestAmount = param.requestAmount / 100;
+		param.money = param.requestAmount;
+		param.orderid = param.channelId + moment().utcOffset( 8 ).format( 'YYMMDDHHmmss' );
+		param.s = 2;
+
 		const timestamp = Date.now();
-		const args = `?test=true&agent=${param.channelId}&param={"money":${param.requestAmount},"account":"${getRealAccount( param.account )}","orderid":${orderid},"s":2}&timestamp="${timestamp}"`;
+		console.log( param.channelId + timestamp + agent_md5_key )
+		const key = crypto.createHash( 'md5' ).update( param.channelId + timestamp + agent_md5_key ).digest( 'hex' );
+		const route = ChannelHandleRoute;
+		const qs_encode = qs.stringify( param );
+		console.log( { qs_encode } )
+		const paramEncode = encodeURIComponent( utils.desEncode( agent_des_key, qs_encode ) );
+		const args = `?agent=${param.channelId}&param=${paramEncode}&timestamp=${timestamp}&key=${key}`;
 		const url = route + args;
 
-		console.log( url )
+		console.log( { url } )
 
 		request( url, ( error, response, responseData ) => {
 
@@ -151,12 +167,37 @@ const updateServerPlayerAmount = async ( param ) => {
 			if ( !!error && !response || !responseData || response.statusCode != 200 ) {
 				resolve( false );
 			} else {
-				console.log( JSON.stringify( responseData ) );
 				resolve( true );
 			}
 		} );
 	} );
 }
 
+// const updateServerPlayerAmount = async ( param ) => {
+// 	return new Promise( ( resolve, reject ) => {
+
+// 		param.requestAmount = param.requestAmount / 100;
+
+// 		const orderid = param.channelId + moment().utcOffset( 8 ).format( 'YYMMDDHHmmss' );;
+// 		const route = ChannelHandleRoute;
+// 		const timestamp = Date.now();
+// 		const args = `?test=true&agent=${param.channelId}&param={"money":${param.requestAmount},"account":"${getRealAccount( param.account )}","orderid":${orderid},"s":2}&timestamp="${timestamp}"`;
+// 		const url = route + args;
+
+// 		console.log( url )
+
+// 		request( url, ( error, response, responseData ) => {
+
+// 			console.log( JSON.stringify( { error, response, responseData } ) )
+
+// 			if ( !!error && !response || !responseData || response.statusCode != 200 ) {
+// 				resolve( false );
+// 			} else {
+// 				console.log( JSON.stringify( responseData ) );
+// 				resolve( true );
+// 			}
+// 		} );
+// 	} );
+// }
 
 module.exports = router;
