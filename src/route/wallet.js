@@ -113,9 +113,6 @@ router.get( '/checkBalance', async ( req, res ) => {
 	console.log( { res_obj } )
 	console.log( { param_return } )
 
-	var result = await updateServerPlayerAmount( param, agent_des_key, agent_md5_key );
-
-	console.log( { result } );
 
 	setTimeout( () => {
 		if ( requestPass ) {
@@ -125,7 +122,12 @@ router.get( '/checkBalance', async ( req, res ) => {
 		}
 	}, 1000 );
 
-
+	if ( requestPass ) {
+		var result = await updateServerPlayerAmount( param, agent_des_key, agent_md5_key );
+		console.log( { result } );
+	} else {
+		console.log( '=== wallet is not enough balance so cant up score for player ===' )
+	}
 } )
 
 const ChannelHandleRoute = 'http://192.168.1.208:89/channelHandle';
@@ -172,32 +174,5 @@ const updateServerPlayerAmount = async ( param, agent_des_key, agent_md5_key ) =
 		} );
 	} );
 }
-
-// const updateServerPlayerAmount = async ( param ) => {
-// 	return new Promise( ( resolve, reject ) => {
-
-// 		param.requestAmount = param.requestAmount / 100;
-
-// 		const orderid = param.channelId + moment().utcOffset( 8 ).format( 'YYMMDDHHmmss' );;
-// 		const route = ChannelHandleRoute;
-// 		const timestamp = Date.now();
-// 		const args = `?test=true&agent=${param.channelId}&param={"money":${param.requestAmount},"account":"${getRealAccount( param.account )}","orderid":${orderid},"s":2}&timestamp="${timestamp}"`;
-// 		const url = route + args;
-
-// 		console.log( url )
-
-// 		request( url, ( error, response, responseData ) => {
-
-// 			console.log( JSON.stringify( { error, response, responseData } ) )
-
-// 			if ( !!error && !response || !responseData || response.statusCode != 200 ) {
-// 				resolve( false );
-// 			} else {
-// 				console.log( JSON.stringify( responseData ) );
-// 				resolve( true );
-// 			}
-// 		} );
-// 	} );
-// }
 
 module.exports = router;
