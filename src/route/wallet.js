@@ -184,7 +184,7 @@ const updateServerPlayerAmount = async ( param, agent_des_key, agent_md5_key ) =
 		param.channelId = param.channelId.toString();
 		param.requestAmount = param.requestAmount / 100;
 		param.money = param.requestAmount;
-		param.orderid = param.channelId + moment().utcOffset( 8 ).format( 'YYMMDDHHmmss' );
+		param.orderid = param.channelId + moment().utcOffset( 8 ).format( 'YYMMDDHHmmssSSS' ) + param.account;
 		param.s = 2;
 
 		const timestamp = Date.now();
