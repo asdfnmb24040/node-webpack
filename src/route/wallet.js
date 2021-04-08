@@ -6,7 +6,7 @@ const request = require( 'request' );
 const crypto = require( 'crypto' );
 var qs = require( 'querystring' );
 
-let balance = 6000;
+// let balance = 1090;
 
 const mysql = require( 'mysql' );
 const connection = mysql.createConnection( {
@@ -23,6 +23,37 @@ const connection = mysql.createConnection( {
 } );
 
 connection.connect();
+
+const balance_map = new Map();
+balance_map.set( 'Vicky001', 6000 );
+balance_map.set( 'Vicky002', 7000 );
+balance_map.set( 'Vicky003', 8000 );
+balance_map.set( 'armand08_player', 9000 );
+
+function getPlayerBalance ( param ) {
+	const req_account = getRealAccount( param.account );
+
+	console.log( { req_account } )
+
+	if ( balance_map.has( req_account ) ) {
+		return balance_map.get( req_account );
+	} else {
+		console.log( 'getPlayerBalance => cant found account' );
+		return 0;
+	}
+}
+
+function setPlayerBalance ( param, new_val ) {
+	const req_account = getRealAccount( param.account );
+
+	console.log( { req_account } )
+
+	if ( balance_map.has( req_account ) ) {
+		balance_map.set( req_account, new_val );
+	} else {
+		console.log( 'setPlayerBalance => cant found account' );
+	}
+}
 
 async function queryAsync ( sql, values ) {
 	return new Promise( ( resolve, reject ) => {
@@ -66,6 +97,9 @@ router.get( '/getBalance', async ( req, res ) => {
 	const param = utils.desDecode( agent_md5_key, req.query.param );
 	const param_obj = JSON.parse( param );
 	console.log( { param } );
+
+	const balance = getPlayerBalance( param_obj );
+
 	const res_obj = {
 		channelId: param_obj.channelId,
 		account: param_obj.account,
@@ -77,6 +111,7 @@ router.get( '/getBalance', async ( req, res ) => {
 	const param_return = utils.desEncode( agent_md5_key, json );
 	console.log( { res_obj } )
 	console.log( { param_return } )
+	console.log( { balance_map } )
 
 	setTimeout( () => {
 		res.status( 200 ).send( param_return )
@@ -95,12 +130,14 @@ router.get( '/checkBalance', async ( req, res ) => {
 	const param_decode = utils.desDecode( agent_md5_key, param_raw );
 	const param = JSON.parse( param_decode );
 	console.log( { param } );
+	let balance = getPlayerBalance( param );
 	const requestAmount = parseInt( param.requestAmount )
 	const requestPass = param.requestAmount <= balance
 	console.log( { requestAmount, balance } )
 
 	if ( requestPass ) {
 		balance -= requestAmount;
+		setPlayerBalance( param, balance )
 	}
 
 	const res_obj = {
@@ -113,7 +150,6 @@ router.get( '/checkBalance', async ( req, res ) => {
 	console.log( { res_obj } )
 	console.log( { param_return } )
 
-
 	setTimeout( () => {
 		if ( requestPass ) {
 			res.status( 200 ).send( param_return )
@@ -125,6 +161,7 @@ router.get( '/checkBalance', async ( req, res ) => {
 	if ( requestPass ) {
 		var result = await updateServerPlayerAmount( param, agent_des_key, agent_md5_key );
 		console.log( { result } );
+		console.log( { balance_map } )
 	} else {
 		console.log( '=== wallet is not enough balance so cant up score for player ===' )
 	}
