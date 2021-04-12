@@ -28,7 +28,7 @@ const balance_map = new Map();
 balance_map.set( 'Vicky001', 6000 );
 balance_map.set( 'Vicky002', 7000 );
 balance_map.set( 'Vicky003', 8000 );
-balance_map.set( 'armand08_player', 9000 );
+balance_map.set( 'armand08_player', 100000 );
 
 function getPlayerBalance ( param ) {
 	const req_account = getRealAccount( param.account );
@@ -147,14 +147,14 @@ router.get( '/checkBalance', async ( req, res ) => {
 
 	const json = JSON.stringify( res_obj );
 	const param_return = utils.desEncode( agent_md5_key, json );
-	console.log( { res_obj } )
+	console.log( '====>', { res_obj } )
 	console.log( { param_return } )
 
 	setTimeout( () => {
 		if ( requestPass ) {
 			res.status( 200 ).send( param_return )
 		} else {
-			res.status( 500 ).send( param_return )
+			res.status( 403 ).send( param_return )
 		}
 	}, 1000 );
 
