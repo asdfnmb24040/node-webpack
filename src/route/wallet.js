@@ -28,7 +28,8 @@ const balance_map = new Map();
 balance_map.set( 'Vicky001', 6000 );
 balance_map.set( 'Vicky002', 7000 );
 balance_map.set( 'Vicky003', 8000 );
-balance_map.set( 'armand08_player', 100000 );
+balance_map.set( 'armand09_player', 285.63 );
+balance_map.set( 'armand08_11', 10000.633 );
 
 function getPlayerBalance ( param ) {
 	const req_account = getRealAccount( param.account );
@@ -131,7 +132,7 @@ router.get( '/checkBalance', async ( req, res ) => {
 	const param = JSON.parse( param_decode );
 	console.log( { param } );
 	let balance = getPlayerBalance( param );
-	const requestAmount = parseInt( param.requestAmount )
+	const requestAmount = parseFloat( param.requestAmount )
 	const requestPass = param.requestAmount <= balance
 	console.log( { requestAmount, balance } )
 
@@ -182,7 +183,6 @@ const updateServerPlayerAmount = async ( param, agent_des_key, agent_md5_key ) =
 
 		param.account = getRealAccount( param.account )
 		param.channelId = param.channelId.toString();
-		param.requestAmount = param.requestAmount / 100;
 		param.money = param.requestAmount;
 		param.orderid = param.channelId + moment().utcOffset( 8 ).format( 'YYMMDDHHmmssSSS' ) + param.account;
 		param.s = 2;
