@@ -11,7 +11,7 @@ var qs = require( 'querystring' );
 const mysql = require( 'mysql' );
 const connection = mysql.createConnection( {
 	// host: '192.168.11.60',
-	host: '192.168.1.208',
+	host: '192.168.1.207',
 	port: 3306,
 	database: 'KYDB_NEW',
 	user: 'root',
@@ -30,6 +30,9 @@ balance_map.set( 'Vicky002', 7000 );
 balance_map.set( 'Vicky003', 8000 );
 balance_map.set( 'armand09_player', 285.63 );
 balance_map.set( 'armand08_11', 10000.633 );
+balance_map.set( 'andy04', 1234567.89 );
+balance_map.set( 'joecool59', 1234567.89 );
+balance_map.set( 'andyWallet2', 2222 );
 
 function getPlayerBalance ( param ) {
 	const req_account = getRealAccount( param.account );
@@ -80,6 +83,8 @@ function getRealAccount ( account ) {
 	return account.substring( leng + 1 );
 }
 
+router.use( express.text() );
+
 router.get( '/addBalance', async ( req, res ) => {
 	balance = req.query.balance;
 
@@ -117,6 +122,42 @@ router.get( '/getBalance', async ( req, res ) => {
 	setTimeout( () => {
 		res.status( 200 ).send( param_return )
 	}, 1000 );
+} )
+
+router.get( '/getBalance1', async ( req, res ) => {
+	console.log( '======getBalance1======' );
+	console.log( {
+		method: req.method,
+		url: req.protocol + '://' + req.get( 'host' ) + req.originalUrl,
+		content_type: req.headers[ 'content-type' ],
+		query: req.query,
+		body: req.body
+	} );
+
+	let sql = 'SELECT * FROM game_api.agents where agent = ?'
+	const [ agent ] = await queryAsync( sql, [ req.query.channelId ] );
+	console.log( { query: req.query, agent } );
+
+	// 找不到代理驗證失敗
+	if ( !agent ) {
+		return res.sendStatus( 401 );
+	}
+
+	const { desKey, md5Key } = agent;
+
+	const bodyStr = utils.desDecode( desKey, req.query.param );
+	const playerObj = JSON.parse( bodyStr );
+
+	console.log( { playerObj } );
+
+	const balance = getPlayerBalance( playerObj );
+
+	const encryptedReturnStr = utils.desEncode( desKey, JSON.stringify( {
+		channelId: playerObj.channelId,
+		account: playerObj.account,
+		balance: balance,
+	} ) );
+	return res.send( encryptedReturnStr );
 } )
 
 router.get( '/checkBalance', async ( req, res ) => {
@@ -167,6 +208,63 @@ router.get( '/checkBalance', async ( req, res ) => {
 		console.log( '=== wallet is not enough balance so cant up score for player ===' )
 	}
 } )
+
+router.post( [ '/withdraw', '/deposit' ], async ( req, res ) => {
+	const isWithdraw = req.originalUrl.includes( 'wallet/withdraw' );
+	isWithdraw ? console.log( '======withdraw======' ) : console.log( '======deposit======' );
+	console.log( {
+		method: req.method,
+		url: req.protocol + '://' + req.get( 'host' ) + req.originalUrl,
+		content_type: req.headers[ 'content-type' ],
+		query: req.query,
+		body: req.body
+	} );
+
+	let sql = 'SELECT * FROM game_api.agents where agent = ?'
+	const [ agent ] = await queryAsync( sql, [ req.query.channelId ] );
+
+	// 找不到代理驗證失敗
+	if ( !agent ) {
+		return res.sendStatus( 401 );
+	}
+
+	const { desKey, md5Key } = agent;
+
+	// signature不合法驗證失敗
+	if ( false ) {
+		return res.sendStatus( 401 );
+	}
+
+	const bodyStr = utils.desDecode( desKey, req.body );
+	const playerObj = JSON.parse( bodyStr );
+
+	console.log( { playerObj } );
+
+	let balance = getPlayerBalance( playerObj );
+	const requestAmount = parseFloat( playerObj.requestAmount );
+
+	// 操作金額錯誤
+	if ( playerObj.requestAmount < 0 ) {
+		const encryptedReturnStr = utils.desEncode( desKey, JSON.stringify( { code: 31 } ) );
+		return res.status( 400 ).send( encryptedReturnStr );
+	}
+
+	// 操作金額大於可用餘額
+	if ( isWithdraw && playerObj.requestAmount > balance ) {
+		const encryptedReturnStr = utils.desEncode( desKey, JSON.stringify( { code: 138 } ) );
+		return res.status( 400 ).send( encryptedReturnStr );
+	}
+
+	isWithdraw ? balance -= requestAmount : balance += requestAmount;
+	setPlayerBalance( playerObj, balance );
+
+	const encryptedReturnStr = utils.desEncode( desKey, JSON.stringify( {
+		channelId: playerObj.channelId,
+		account: playerObj.account,
+		balance: balance,
+	} ) );
+	return res.send( encryptedReturnStr );
+} );
 
 const ChannelHandleRoute = 'http://192.168.1.208:89/channelHandle';
 //const ChannelHandleRoute = 'http://127.0.0.1:89/channelHandle';
