@@ -2,6 +2,7 @@ const express = require( 'express' )
 const app = express()
 const port = 3001
 const path = require( 'path' );
+const mysqlHelper = require('./utils/mysqlHelper')
 const bodyParser = require( 'body-parser' )
 const home = require( './route/home' );
 const wallet = require( './route/wallet' );

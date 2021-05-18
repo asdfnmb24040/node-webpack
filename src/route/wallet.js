@@ -5,24 +5,7 @@ const moment = require( 'moment' );
 const request = require( 'request' );
 const crypto = require( 'crypto' );
 var qs = require( 'querystring' );
-
-// let balance = 1090;
-
-const mysql = require( 'mysql' );
-const connection = mysql.createConnection( {
-	// host: '192.168.11.60',
-	host: '192.168.1.207',
-	port: 3306,
-	database: 'KYDB_NEW',
-	user: 'root',
-	password: '123456',
-	connectionLimit: 20,
-	charset: 'utf8mb4',
-	dateStrings: true,
-	multipleStatements: true,
-} );
-
-connection.connect();
+const mysqlHelper = require( '../utils/mysqlHelper' );
 
 const balance_map = new Map();
 balance_map.set( 'Vicky001', 6000 );
@@ -59,18 +42,6 @@ function setPlayerBalance ( param, new_val ) {
 	}
 }
 
-async function queryAsync ( sql, values ) {
-	return new Promise( ( resolve, reject ) => {
-		connection.query( sql, values, function ( err, result, fields ) {
-			if ( err ) {
-				reject( err );
-			} else {
-				resolve( result );
-			}
-		} );
-	} );
-}
-
 function getRealChannelId ( account ) {
 	const leng = account.indexOf( '_' );
 
@@ -97,7 +68,7 @@ router.get( '/getBalance', async ( req, res ) => {
 	console.log( req.query )
 	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where ChannelId = '${getRealChannelId( req.query.account )}';`
 	console.log( { sql } )
-	const query_agent_md5_key = await queryAsync( sql, [] )
+	const query_agent_md5_key = await mysqlHelper.queryAsync( sql, [] )
 	// console.log( { query: query_agent_md5_key } )
 	const agent_md5_key = query_agent_md5_key[ 0 ].Md5key;
 	const param = utils.desDecode( agent_md5_key, req.query.param );
@@ -135,7 +106,7 @@ router.get( '/getBalance1', async ( req, res ) => {
 	} );
 
 	let sql = 'SELECT * FROM game_api.agents where agent = ?'
-	const [ agent ] = await queryAsync( sql, [ req.query.channelId ] );
+	const [ agent ] = await mysqlHelper.queryAsync( sql, [ req.query.channelId ] );
 	console.log( { query: req.query, agent } );
 
 	// 找不到代理驗證失敗
@@ -165,7 +136,7 @@ router.get( '/checkBalance', async ( req, res ) => {
 	const param_raw = decodeURIComponent( req.query.param )
 	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where ChannelId = '${getRealChannelId( req.query.account )}';`
 	console.log( { sql } )
-	const query_agent_md5_key = await queryAsync( sql, [] )
+	const query_agent_md5_key = await mysqlHelper.queryAsync( sql, [] )
 
 	const agent_md5_key = query_agent_md5_key[ 0 ].Md5key
 	const agent_des_key = query_agent_md5_key[ 0 ].Deskey
@@ -221,7 +192,7 @@ router.post( [ '/withdraw', '/deposit' ], async ( req, res ) => {
 	} );
 
 	let sql = 'SELECT * FROM game_api.agents where agent = ?'
-	const [ agent ] = await queryAsync( sql, [ req.query.channelId ] );
+	const [ agent ] = await mysqlHelper.queryAsync( sql, [ req.query.channelId ] );
 
 	// 找不到代理驗證失敗
 	if ( !agent ) {

@@ -5,33 +5,7 @@ const mysql = require( 'mysql' );
 var qs = require( 'querystring' );
 const utils = require( '../utils/utils' );
 const request = require( 'request' );
-
-const connection = mysql.createConnection( {
-	// host: '192.168.11.60',
-	host: '192.168.1.208',
-	port: 3306,
-	database: 'KYDB_NEW',
-	user: 'root',
-	password: '123456',
-	connectionLimit: 20,
-	charset: 'utf8mb4',
-	dateStrings: true,
-	multipleStatements: true,
-} );
-
-connection.connect();
-
-async function queryAsync ( sql, values ) {
-	return new Promise( ( resolve, reject ) => {
-		connection.query( sql, values, function ( err, result, fields ) {
-			if ( err ) {
-				reject( err );
-			} else {
-				resolve( result );
-			}
-		} );
-	} );
-}
+const mysqlHelper = require( '../utils/mysqlHelper' );
 
 const ChannelHandleRoute = 'http://192.168.11.48:89/channelHandle';
 const ChannelRecordHandleRoute = 'http://192.168.11.48:90/getRecordHandle';
@@ -44,7 +18,7 @@ router.get( '/getRecordHandle', async ( req, res ) => {
 
 	let sql = `SELECT * FROM KYDB_NEW.Sys_ProxyAccount where ChannelId = '${param.account}';`
 	console.log( { sql } )
-	const query_agent_md5_key = await queryAsync( sql, [] )
+	const query_agent_md5_key = await mysqlHelper.queryAsync( sql, [] )
 	const agent_md5_key = query_agent_md5_key[ 0 ].Md5key
 	const agent_des_key = query_agent_md5_key[ 0 ].Deskey
 	console.log( { param, agent_md5_key, agent_des_key } );
