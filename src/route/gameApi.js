@@ -33,15 +33,14 @@ router.get( '/getRecordHandle', async ( req, res ) => {
 	const qs_encode = qs.stringify( param );
 	console.log( { qs_encode } )
 	const paramEncode = encodeURIComponent( utils.desEncode( agent_des_key, qs_encode ) );
-	const apiArgs = `?kindID=${param.kindID}&recordID=${param.recordID}&?account=${param.account}?lang=${param.lang}`;
-	const authArgs = `&agent=${param.channelId}&param=${paramEncode}&timestamp=${timestamp}&key=${key}`;
-	const url = route + apiArgs + authArgs;
+	const args = `?&agent=${param.channelId}&param=${paramEncode}&timestamp=${timestamp}&key=${key}`;
+	const url = route + args;
 
-	console.log( { url } )
+	console.log( { '傳給後台的路由': url } )
 
 	request( { url, timeout: 1000 }, ( error, response, responseData ) => {
 
-		console.log( JSON.stringify( { error, response, responseData } ) )
+		// console.log( JSON.stringify( { error, response, responseData } ) )
 
 		if ( !!error && !response || !responseData || response.statusCode != 200 ) {
 			res.status( 500 ).send( error )
