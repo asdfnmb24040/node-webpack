@@ -8,7 +8,8 @@ const request = require( 'request' );
 const mysqlHelper = require( '../utils/mysqlHelper' );
 
 const ChannelHandleRoute = 'http://192.168.11.48:89/channelHandle';
-const ChannelRecordHandleRoute = 'http://192.168.11.48:90/getRecordHandle';
+// const ChannelRecordHandleRoute = 'http://192.168.11.48:90/getRecordHandle';
+const ChannelRecordHandleRoute = 'http://192.168.1.208:90/getRecordHandle';
 
 router.get( '/getRecordHandle', async ( req, res ) => {
 
