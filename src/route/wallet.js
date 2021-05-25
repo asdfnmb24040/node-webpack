@@ -1,17 +1,21 @@
 var express = require( 'express' );
+const fs = require( 'fs' )
 var router = express.Router();
 const utils = require( '../utils/utils' );
 const moment = require( 'moment' );
+const path = require( 'path' );
 const request = require( 'request' );
 const crypto = require( 'crypto' );
 var qs = require( 'querystring' );
+
+const WALLET_DATA_DIR = './walletData/';
 
 // let balance = 1090;
 
 const mysql = require( 'mysql' );
 const connection = mysql.createConnection( {
 	// host: '192.168.11.60',
-	host: '192.168.1.207',
+	host: '192.168.1.208',
 	port: 3306,
 	database: 'KYDB_NEW',
 	user: 'root',
@@ -32,18 +36,20 @@ balance_map.set( 'armand09_player', 285.63 );
 balance_map.set( 'armand08_11', 10000.633 );
 balance_map.set( 'andy04', 1234567.89 );
 balance_map.set( 'joecool59', 1234567.89 );
-balance_map.set( 'andyWallet2', 2222 );
 
 function getPlayerBalance ( param ) {
 	const req_account = getRealAccount( param.account );
 
 	console.log( { req_account } )
 
-	if ( balance_map.has( req_account ) ) {
-		return balance_map.get( req_account );
+	const dataPath = path.join( WALLET_DATA_DIR, req_account );
+	if ( fs.existsSync( dataPath ) ) {
+		const data = fs.readFileSync( dataPath );
+		return parseFloat( data );
 	} else {
 		console.log( 'getPlayerBalance => cant found account' );
-		return 0;
+		setPlayerBalance( param, 123456.78 );
+		return 123456.78;
 	}
 }
 
@@ -52,11 +58,13 @@ function setPlayerBalance ( param, new_val ) {
 
 	console.log( { req_account } )
 
-	if ( balance_map.has( req_account ) ) {
-		balance_map.set( req_account, new_val );
-	} else {
-		console.log( 'setPlayerBalance => cant found account' );
-	}
+	// if ( balance_map.has( req_account ) ) {
+	const dataPath = path.join( WALLET_DATA_DIR, req_account );
+	fs.writeFileSync( dataPath, `${new_val}` );
+	// balance_map.set( req_account, new_val );
+	// } else {
+	// console.log( 'setPlayerBalance => cant found account' );
+	// }
 }
 
 async function queryAsync ( sql, values ) {
@@ -117,7 +125,6 @@ router.get( '/getBalance', async ( req, res ) => {
 	const param_return = utils.desEncode( agent_md5_key, json );
 	console.log( { res_obj } )
 	console.log( { param_return } )
-	console.log( { balance_map } )
 
 	setTimeout( () => {
 		res.status( 200 ).send( param_return )
@@ -151,6 +158,12 @@ router.get( '/getBalance1', async ( req, res ) => {
 	console.log( { playerObj } );
 
 	const balance = getPlayerBalance( playerObj );
+
+	console.log( 'return obj', JSON.stringify( {
+		channelId: playerObj.channelId,
+		account: playerObj.account,
+		balance: balance,
+	} ) );
 
 	const encryptedReturnStr = utils.desEncode( desKey, JSON.stringify( {
 		channelId: playerObj.channelId,
@@ -203,7 +216,6 @@ router.get( '/checkBalance', async ( req, res ) => {
 	if ( requestPass ) {
 		var result = await updateServerPlayerAmount( param, agent_des_key, agent_md5_key );
 		console.log( { result } );
-		console.log( { balance_map } )
 	} else {
 		console.log( '=== wallet is not enough balance so cant up score for player ===' )
 	}
@@ -257,6 +269,13 @@ router.post( [ '/withdraw', '/deposit' ], async ( req, res ) => {
 
 	isWithdraw ? balance -= requestAmount : balance += requestAmount;
 	setPlayerBalance( playerObj, balance );
+
+
+	console.log( 'return obj', JSON.stringify( {
+		channelId: playerObj.channelId,
+		account: playerObj.account,
+		balance: balance,
+	} ) );
 
 	const encryptedReturnStr = utils.desEncode( desKey, JSON.stringify( {
 		channelId: playerObj.channelId,
