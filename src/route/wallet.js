@@ -12,7 +12,8 @@ balance_map.set( 'Vicky001', 6000 );
 balance_map.set( 'Vicky002', 7000 );
 balance_map.set( 'Vicky003', 8000 );
 balance_map.set( 'armand09_player', 285.63 );
-balance_map.set( 'armand08_11', 10000.633 );
+balance_map.set( '300002_07', 10000.633 );
+balance_map.set( '300002_08', 10000.633 );
 balance_map.set( 'andy04', 1234567.89 );
 balance_map.set( 'joecool59', 1234567.89 );
 balance_map.set( 'andyWallet2', 2222 );
@@ -55,6 +56,12 @@ function getRealAccount ( account ) {
 }
 
 router.use( express.text() );
+
+router.get( '/test', async ( req, res ) => {
+	console.log( 'test' );
+	res.status( 200 ).send( 'ok' )
+
+} )
 
 router.get( '/addBalance', async ( req, res ) => {
 	balance = req.query.balance;
@@ -237,8 +244,8 @@ router.post( [ '/withdraw', '/deposit' ], async ( req, res ) => {
 	return res.send( encryptedReturnStr );
 } );
 
-const ChannelHandleRoute = 'http://192.168.1.208:89/channelHandle';
-//const ChannelHandleRoute = 'http://127.0.0.1:89/channelHandle';
+// const ChannelHandleRoute = 'http://192.168.1.208:89/channelHandle';
+const ChannelHandleRoute = 'http://127.0.0.1:89/channelHandle';
 
 /**
  * @description 呼叫channelHandle進行上分
